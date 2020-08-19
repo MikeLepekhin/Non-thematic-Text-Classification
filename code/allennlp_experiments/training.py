@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-def build_trainer(
+def build_classifier_trainer(
     model: Model,
     serialization_dir: str,
     train_loader: DataLoader,
