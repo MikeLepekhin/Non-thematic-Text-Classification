@@ -97,3 +97,41 @@ def interpret_sentence(sentence, tokenizer, k, interpreters=[], true_label=None,
     k = min(k, len(tokens))
     for interpreter in interpreters:
         run_interpreter(sentence, tokens, k, interpreter)
+        
+        
+def get_trigger_words(sentence, tokenizer, k, interpretor):
+    result = []
+    
+    tokens = tokenizer.tokenize(sentence)
+    k = min(k, len(tokens))
+    vec = np.array(interpretor.saliency_interpret_from_json({"sentence": sentence})['instance_1']['grad_input_1'])
+    important_indices = vec.argsort()[-k:]
+    
+    for token_id in important_indices:
+        result.append(tokens[token_id])
+    return result
+
+
+def get_most_frequent_trigger_words(sentence_list, tokenizer, k, interpretor):
+    result = {}
+    
+    for sentence in sentence_list:
+        trigger_words = get_trigger_words(sentence, tokenizer, k, interpretor)
+        for word in trigger_words:
+            if str(word) not in result:
+                result[str(word)] = 0
+            result[str(word)] += 1
+                
+    result = list(result.items())
+    result = sorted(result, key=lambda x: -x[1])
+    return result
+
+
+def get_dataset_by_confusion_pair(sentences, confusion_true, confusion_predicted,
+                                  true_classes, predicted_classes):
+    result = []
+    
+    for sentence, true_class, predicted_class in zip(sentences, true_classes, predicted_classes):
+        if true_class == confusion_true and predicted_class == confusion_predicted:
+            result.append(sentence)
+    return result
