@@ -16,7 +16,9 @@ def build_classifier_trainer(
     dev_loader: DataLoader,
     num_epochs: int = 1,
     cuda_device: int = -1,
-    learning_rate: float = 0.000025
+    learning_rate: float = 0.000025,
+    world_size: int = 1,
+    distributed: bool = False
 ) -> Trainer:
     parameters = [
         [n, p]
@@ -31,6 +33,8 @@ def build_classifier_trainer(
         num_epochs=num_epochs,
         optimizer=optimizer,
         cuda_device=cuda_device,
+        world_size=world_size,
+        distributed=distributed
     )
     return trainer
 

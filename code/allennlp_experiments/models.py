@@ -1,9 +1,9 @@
 from allennlp.data import Vocabulary
 from allennlp.models import Model
 from allennlp.modules import TextFieldEmbedder, Seq2VecEncoder
-from allennlp.modules.token_embedders import PretrainedTransformerEmbedder
+from allennlp.modules.token_embedders import Embedding, PretrainedTransformerEmbedder
 from allennlp.modules.text_field_embedders import BasicTextFieldEmbedder
-from allennlp.modules.seq2vec_encoders import BertPooler
+from allennlp.modules.seq2vec_encoders import BertPooler, LstmSeq2VecEncoder
 from allennlp.nn import util
 from allennlp.predictors import TextClassifierPredictor
 from allennlp.training.metrics import CategoricalAccuracy
@@ -14,7 +14,7 @@ import torch
 from typing import Dict, Iterable, List, Tuple
 
 
-class SimpleTransformerClassifier(Model):
+class SimpleClassifier(Model):
     def __init__(self,
                  vocab: Vocabulary,
                  embedder: TextFieldEmbedder,
@@ -57,4 +57,20 @@ def build_transformer_model(vocab: Vocabulary, transformer_model: str) -> Model:
     embedding = PretrainedTransformerEmbedder(model_name=transformer_model)
     embedder = BasicTextFieldEmbedder(token_embedders={'bert_tokens': embedding})
     encoder = BertPooler(transformer_model)
-    return SimpleTransformerClassifier(vocab, embedder, encoder)
+    return SimpleClassifier(vocab, embedder, encoder)
+
+def build_simple_lstm_model(vocab: Vocabulary,
+                            emb_size: int = 256,
+                            hidden_size: int = 256,
+                            num_layers: int = 2,
+                            bidirectional: bool = True) -> Model:
+    print("Building the model")
+    vocab_size = vocab.get_vocab_size("tokens")
+    embedder = BasicTextFieldEmbedder(
+        {"tokens": Embedding(embedding_dim=emb_size, num_embeddings=vocab_size)}
+    )
+    encoder = LstmSeq2VecEncoder(
+        input_size=emb_size, hidden_size=hidden_size, 
+        num_layers=num_layers, bidirectional=bidirectional
+    )
+    return SimpleClassifier(vocab, embedder, encoder)

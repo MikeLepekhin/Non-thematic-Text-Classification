@@ -41,6 +41,26 @@ label_description = {
     'A22': 'stuff'
 }
 
+description_to_label = {
+    'argum': 'A1',
+    'emotive': 'A3',
+    'fictive': 'A4',
+    'flippant': 'A5',
+    'informal': 'A6',
+    'instruct': 'A7',
+    'reporting': 'A8',
+    'legal': 'A9',
+    'personal': 'A11',
+    'commercial': 'A12',
+    'propaganda': 'A13',
+    'research': 'A14',
+    'specialist': 'A15',
+    'info': 'A16',
+    'eval': 'A17',
+    'poetic': 'A19',
+    'appeal': 'A20',
+    'stuff': 'A22'
+}
 
 def predict_classes(sentence_list, predictor, vocab):
     id_to_label = vocab.get_index_to_token_vocabulary('labels')

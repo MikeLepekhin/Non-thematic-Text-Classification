@@ -1,6 +1,6 @@
 import allennlp
-from allennlp.data.token_indexers import TokenIndexer, PretrainedTransformerIndexer
-from allennlp.data.tokenizers import Token, Tokenizer, PretrainedTransformerTokenizer
+from allennlp.data.token_indexers import TokenIndexer, PretrainedTransformerIndexer, SingleIdTokenIndexer
+from allennlp.data.tokenizers import Token, Tokenizer, PretrainedTransformerTokenizer, WhitespaceTokenizer, SpacyTokenizer
 from allennlp.data import DataLoader, DatasetReader, Instance, Vocabulary
 from allennlp.data.fields import LabelField, TextField
 import tempfile
@@ -92,6 +92,14 @@ def build_smart_transformer_dataset_reader(transformer_model, MAX_TOKENS=512, lo
     return SmartClassificationDatasetReader(
         tokenizer=tokenizer, token_indexers=token_indexers,
         max_tokens=MAX_TOKENS, lower=lower
+    )
+
+def build_dataset_reader(lower=False) -> DatasetReader:
+    tokenizer = WhitespaceTokenizer()
+    token_indexers = {'tokens': SingleIdTokenIndexer()}
+    return ClassificationDatasetReader(
+        tokenizer=tokenizer, token_indexers=token_indexers,
+        max_tokens=None, lower=lower
     )
 
 # The other `build_*` methods are things we've seen before, so they are
