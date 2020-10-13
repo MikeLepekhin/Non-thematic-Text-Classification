@@ -155,3 +155,11 @@ def get_dataset_by_confusion_pair(sentences, confusion_true, confusion_predicted
         if true_class == confusion_true and predicted_class == confusion_predicted:
             result.append(sentence)
     return result
+
+def get_all_correctly_predicted_sentences(sentences, true_classes, predicted_classes):
+    result = []
+    
+    for sentence, true_class, predicted_class in zip(sentences, true_classes, predicted_classes):
+        if true_class == predicted_class:
+            result.append(sentence)
+    return result

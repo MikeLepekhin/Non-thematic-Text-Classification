@@ -36,6 +36,62 @@ class ClassificationDatasetReader(DatasetReader):
             yield self.text_to_instance(text, label)
         
         
+class DomainDatasetReader(DatasetReader):
+    def __init__(self,
+                 lazy: bool = False,
+                 tokenizer: Tokenizer = None,
+                 token_indexers: Dict[str, TokenIndexer] = None,
+                 max_tokens: int = None,
+                 lower: bool = False):
+        super().__init__(lazy)
+        self.tokenizer = tokenizer
+        self.token_indexers = token_indexers
+        self.max_tokens = max_tokens
+        self.lower = lower
+        
+    def text_to_instance(self, string: str, label: str = None) -> Instance:
+        tokens = self.tokenizer.tokenize(string.lower() if self.lower else string)
+        sentence_field = TextField(tokens, self.token_indexers)
+        fields = {"text": sentence_field}
+        if label is not None:
+            fields["label"] = LabelField(label)
+        return Instance(fields)
+
+    def _read(self, file_path: str) -> Iterable[Instance]:
+        dataset_df = pd.read_csv(file_path)
+        for text, label in zip(dataset_df['text'], dataset_df['domain']):
+            yield self.text_to_instance(text, label)
+            
+          
+class AdversarialDatasetReader(DatasetReader):
+    def __init__(self,
+                 lazy: bool = False,
+                 tokenizer: Tokenizer = None,
+                 token_indexers: Dict[str, TokenIndexer] = None,
+                 max_tokens: int = None,
+                 lower: bool = False):
+        super().__init__(lazy)
+        self.tokenizer = tokenizer
+        self.token_indexers = token_indexers
+        self.max_tokens = max_tokens
+        self.lower = lower
+        
+    def text_to_instance(self, string: str, label: str = None, domain: str = None) -> Instance:
+        tokens = self.tokenizer.tokenize(string.lower() if self.lower else string)
+        sentence_field = TextField(tokens, self.token_indexers)
+        fields = {"text": sentence_field}
+        if label is not None:
+            fields["label"] = LabelField(label)
+        if domain is not None:
+            fields["domain"] = LabelField(domain)
+        return Instance(fields)
+
+    def _read(self, file_path: str) -> Iterable[Instance]:
+        dataset_df = pd.read_csv(file_path)
+        for text, label, domain in zip(dataset_df['text'], dataset_df['target'], dataset_df['domain']):
+            yield self.text_to_instance(text, label, domain)
+        
+        
 class SmartClassificationDatasetReader(DatasetReader):
     def __init__(self,
                  lazy: bool = False,
@@ -66,6 +122,7 @@ class SmartClassificationDatasetReader(DatasetReader):
 def read_data(train_path: str, val_path: str, train_reader: DatasetReader,
               val_reader: DatasetReader = None) -> Tuple[Iterable[Instance], Iterable[Instance]]:
     print("Reading data")
+    print(type(train_reader), train_path)
     training_data = train_reader.read(train_path)
     if val_reader is None:
         validation_data = train_reader.read(val_path)
@@ -94,9 +151,28 @@ def build_smart_transformer_dataset_reader(transformer_model, MAX_TOKENS=512, lo
         max_tokens=MAX_TOKENS, lower=lower
     )
 
-def build_dataset_reader(lower=False) -> DatasetReader:
+def build_domain_dataset_reader(lower=False) -> DatasetReader:
     tokenizer = WhitespaceTokenizer()
     token_indexers = {'tokens': SingleIdTokenIndexer()}
+    return DomainDatasetReader(
+        tokenizer=tokenizer, token_indexers=token_indexers,
+        max_tokens=None, lower=lower
+    )
+
+def build_adversarial_dataset_reader(transformer_model, MAX_TOKENS=512, lower=False) -> DatasetReader:
+    tokenizer = PretrainedTransformerTokenizer(transformer_model, max_length=MAX_TOKENS-2)
+    token_indexers = {'bert_tokens': PretrainedTransformerIndexer(transformer_model)}
+    return AdversarialDatasetReader(
+        tokenizer=tokenizer, token_indexers=token_indexers,
+        max_tokens=MAX_TOKENS, lower=lower
+    )
+
+def build_dataset_reader(transformer_model=None, lower=False) -> DatasetReader:
+    if transformer_model is not None:
+        tokenizer = PretrainedTransformerTokenizer(transformer_model)
+    else:
+        tokenizer = WhitespaceTokenizer()
+    token_indexers = {'bert_tokens': SingleIdTokenIndexer()}
     return ClassificationDatasetReader(
         tokenizer=tokenizer, token_indexers=token_indexers,
         max_tokens=None, lower=lower
