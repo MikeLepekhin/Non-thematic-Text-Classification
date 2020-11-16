@@ -31,7 +31,7 @@ With taking into account the part of speech of every replaced token:
 | en         | 0.67  | 0.37 | 0.35 | 0.34 | 0.30 | 0.22  | 0.13 |
 
 
-### Adversarial XLM-Roberta Results
+### Adversarial XLM-Roberta Results when training is on the Russian data
 
 alpha = 0.01
 
@@ -57,7 +57,7 @@ alpha = 0.0
 | ru_natasha | 0.76  | 0.66  | 0.6 | 0.57 | 0.5 | 0.36 | 0.17 |
 | en         | 0.6  | 0.37 | 0.36 | 0.35 | 0.31 | 0.23 | 0.11 |
 
-### Adversatial XLM-Roberta on 9 most relevant topics
+### Adversatial XLM-Roberta when training is on the Russian data on 9 most relevant topics
 
 alpha = 0.01
 
@@ -90,3 +90,30 @@ alpha = 0.5
 | ru natasha | 0.77 | 0.54 | 0.51 | 0.51 | 0.43 | 0.31 | 0.19 |
 | ru         | 0.79 | 0.54 | 0.53 | 0.51 | 0.43 | 0.35 | 0.17 |
 | en         | 0.53 | 0.36 | 0.35 | 0.33 | 0.28 | 0.23 | 0.10 |
+
+
+### Adversatial XLM-Roberta when training is on the English data on 9 most relevant topics
+
+alpha = 0.01
+
+|            | 0%   | 2%   | 5%   | 10%  | 25%  | 50%  | 100% |
+|------------|------|------|------|------|------|------|------|
+| ru natasha | 0.80 | 0.56 | 0.55 | 0.53 | 0.48 | 0.36 | 0.14 |
+| ru         | 0.80 | 0.57 | 0.56 | 0.56 | 0.49 | 0.38 | 0.13 |
+| en         | 0.70 | 0.35 | 0.33 | 0.32 | 0.27 | 0.24 | 0.12 |
+
+alpha = 0.1
+
+|            | 0%   | 2%   | 5%   | 10%  | 25%  | 50%  | 100% |
+|------------|------|------|------|------|------|------|------|
+| ru natasha | 0.78 | 0.57 | 0.54 | 0.54 | 0.48 | 0.36 | 0.14 |
+| ru         | 0.78 | 0.57 | 0.55 | 0.55 | 0.5  | 0.39 | 0.14 |
+| en         | 0.69 | 0.37 | 0.36 | 0.35 | 0.30 | 0.25 | 0.11 |
+
+alpha = 0.5
+
+|            | 0%   | 2%   | 5%   | 10%  | 25%  | 50%  | 100% |
+|------------|------|------|------|------|------|------|------|
+| ru natasha | 0.73 | 0.59 | 0.57 | 0.57 | 0.52 | 0.41 | 0.16 |
+| ru         | 0.73 | 0.61 | 0.60 | 0.59 | 0.53 | 0.47 | 0.18 |
+| en         | 0.57 | 0.42 | 0.40 | 0.39 | 0.34 | 0.28 | 0.15 |
