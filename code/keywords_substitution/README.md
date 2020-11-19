@@ -57,7 +57,7 @@ alpha = 0.0
 | ru_natasha | 0.76  | 0.66  | 0.6 | 0.57 | 0.5 | 0.36 | 0.17 |
 | en         | 0.6  | 0.37 | 0.36 | 0.35 | 0.31 | 0.23 | 0.11 |
 
-### Adversatial XLM-Roberta when training is on the Russian data on 9 most relevant topics
+### Adversarial XLM-Roberta when training is on the Russian data on 9 most relevant topics
 
 alpha = 0.01
 
@@ -92,7 +92,7 @@ alpha = 0.5
 | en         | 0.53 | 0.36 | 0.35 | 0.33 | 0.28 | 0.23 | 0.10 |
 
 
-### Adversatial XLM-Roberta when training is on the English data on 9 most relevant topics
+### Adversarial XLM-Roberta when training is on the English data on 8 most relevant topics
 
 alpha = 0.01
 
