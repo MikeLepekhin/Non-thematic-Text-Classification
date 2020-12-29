@@ -75,11 +75,11 @@ def calc_classifier_metrics(predicted_classes, true_classes):
         predicted_binary = predicted_classes == label
         print(
             f"label ({description})", 
-            f"f1_score {f1_score(predicted_binary, true_binary)}", 
-            f"precision {precision_score(predicted_binary, true_binary)}", 
-            f"recall {recall_score(predicted_binary, true_binary)}", 
+            f"f1_score {f1_score(true_binary, predicted_binary)}", 
+            f"precision {precision_score(true_binary, predicted_binary)}", 
+            f"recall {recall_score(true_binary, predicted_binary)}", 
         )
-    print(f"accuracy", accuracy_score(predicted_classes, true_classes))
+    print(f"accuracy", accuracy_score(true_classes, predicted_classes))
     
 
 def plot_confusion_matrix(y_model, y_true):
@@ -119,24 +119,48 @@ def interpret_sentence(sentence, tokenizer, k, interpreters=[], true_label=None,
         run_interpreter(sentence, tokens, k, interpreter)
         
         
-def get_trigger_words(sentence, tokenizer, k, interpretor):
+def get_trigger_words(sentence, tokenizer, k, interpretor, merger):
     result = []
     
     tokens = tokenizer.tokenize(sentence)
     k = min(k, len(tokens))
     vec = np.array(interpretor.saliency_interpret_from_json({"sentence": sentence})['instance_1']['grad_input_1'])
-    important_indices = vec.argsort()[-k:]
+    important_indices = sorted(vec.argsort()[-k:])
     
-    for token_id in important_indices:
-        result.append(tokens[token_id])
+    i = 0
+    while i < k:
+        j = i
+        cur_token = str(tokens[important_indices[j]])
+        while j + 1 < k and important_indices[j + 1] == important_indices[j] + 1:
+            j += 1
+            if merger(tokens[important_indices[j]]):
+                cur_token += merger(tokens[important_indices[j]])
+            else:
+                cur_token += ' ' + str(tokens[important_indices[j]])
+            
+        result.append(cur_token)
+        i = j + 1
     return result
 
 
-def get_most_frequent_trigger_words(sentence_list, tokenizer, k, interpretor):
+def remove_trigger_words_xlm_roberta(sentence, tokenizer, k, interpretor):
+    result = []
+    
+    tokens = tokenizer.tokenize(sentence)
+    #print(tokens)
+    k = min(k, len(tokens))
+    vec = np.array(interpretor.saliency_interpret_from_json({"sentence": sentence})['instance_1']['grad_input_1'])
+    important_indices = set(vec.argsort()[-k:])
+    
+    res = ''.join(str(token) for token_id, token in enumerate(tokens[1:-1]) if token_id+1 not in important_indices)
+    return res.replace('▁', ' ')
+
+
+def get_most_frequent_trigger_words(sentence_list, tokenizer, k, interpretor, merger):
     result = {}
     
     for sentence in sentence_list:
-        trigger_words = get_trigger_words(sentence, tokenizer, k, interpretor)
+        trigger_words = get_trigger_words(sentence, tokenizer, k, interpretor, merger)
         for word in trigger_words:
             if str(word) not in result:
                 result[str(word)] = 0

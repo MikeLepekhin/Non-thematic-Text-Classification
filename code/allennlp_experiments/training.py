@@ -34,7 +34,8 @@ def build_classifier_trainer(
         optimizer=optimizer,
         cuda_device=cuda_device,
         world_size=world_size,
-        distributed=distributed
+        distributed=distributed,
+        validation_metric='+accuracy'
     )
     return trainer
 

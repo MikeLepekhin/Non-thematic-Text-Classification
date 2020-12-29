@@ -1,5 +1,8 @@
 import allennlp
-from allennlp.data.token_indexers import TokenIndexer, PretrainedTransformerIndexer, SingleIdTokenIndexer
+from allennlp.data.token_indexers import (
+    TokenIndexer, PretrainedTransformerIndexer, SingleIdTokenIndexer,
+    ELMoTokenCharactersIndexer,
+)
 from allennlp.data.tokenizers import Token, Tokenizer, PretrainedTransformerTokenizer, WhitespaceTokenizer, SpacyTokenizer
 from allennlp.data import DataLoader, DatasetReader, Instance, Vocabulary
 from allennlp.data.fields import LabelField, TextField
@@ -33,7 +36,8 @@ class ClassificationDatasetReader(DatasetReader):
     def _read(self, file_path: str) -> Iterable[Instance]:
         dataset_df = pd.read_csv(file_path)
         for text, label in zip(dataset_df['text'], dataset_df['target']):
-            yield self.text_to_instance(text, label)
+            if type(text) == str:
+                yield self.text_to_instance(text[:5000], label)
         
         
 class DomainDatasetReader(DatasetReader):
@@ -76,20 +80,22 @@ class AdversarialDatasetReader(DatasetReader):
         self.max_tokens = max_tokens
         self.lower = lower
         
-    def text_to_instance(self, string: str, label: str = None, domain: str = None) -> Instance:
+    def text_to_instance(self, string: str, label: str = None, topic: str = None) -> Instance:
         tokens = self.tokenizer.tokenize(string.lower() if self.lower else string)
         sentence_field = TextField(tokens, self.token_indexers)
         fields = {"text": sentence_field}
         if label is not None:
             fields["label"] = LabelField(label)
-        if domain is not None:
-            fields["domain"] = LabelField(domain)
+        if topic is not None:
+            fields["topic"] = LabelField(topic, label_namespace='topic_labels')
         return Instance(fields)
 
     def _read(self, file_path: str) -> Iterable[Instance]:
         dataset_df = pd.read_csv(file_path)
-        for text, label, domain in zip(dataset_df['text'], dataset_df['target'], dataset_df['domain']):
-            yield self.text_to_instance(text, label, domain)
+        if 'target' not in dataset_df:
+            dataset_df['target'] = ['W' for _ in range(dataset_df.shape[0])]
+        for text, label, topic in zip(dataset_df['text'], dataset_df['target'], dataset_df['topic']):
+            yield self.text_to_instance(text[:5000], label, str(topic))
         
         
 class SmartClassificationDatasetReader(DatasetReader):
@@ -143,6 +149,14 @@ def build_transformer_dataset_reader(transformer_model, MAX_TOKENS=512, lower=Fa
         max_tokens=MAX_TOKENS, lower=lower
     )
 
+def build_elmo_dataset_reader(lower=False) -> DatasetReader:
+    tokenizer = WhitespaceTokenizer()
+    token_indexers = {'bert_tokens': ELMoTokenCharactersIndexer()}
+    return ClassificationDatasetReader(
+        tokenizer=tokenizer, token_indexers=token_indexers,
+        max_tokens=300, lower=lower
+    )
+
 def build_smart_transformer_dataset_reader(transformer_model, MAX_TOKENS=512, lower=False) -> DatasetReader:
     tokenizer = PretrainedTransformerTokenizer(transformer_model, max_length=None)
     token_indexers = {'bert_tokens': PretrainedTransformerIndexer(transformer_model)}
@@ -183,10 +197,11 @@ def build_dataset_reader(transformer_model=None, lower=False) -> DatasetReader:
 def build_data_loaders(
     train_data: torch.utils.data.Dataset,
     dev_data: torch.utils.data.Dataset,
+    batch_size: int = 16
 ) -> Tuple[DataLoader, DataLoader]:
     # Note that DataLoader is imported from allennlp above, *not* torch.
     # We need to get the allennlp-specific collate function, which is
     # what actually does indexing and batching.
-    train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
-    dev_loader = DataLoader(dev_data, batch_size=16, shuffle=False)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    dev_loader = DataLoader(dev_data, batch_size=batch_size, shuffle=False)
     return train_loader, dev_loader
